@@ -52,6 +52,7 @@ timer_t intervalTimer::_t6;
 timer_t intervalTimer::_t7;
 timer_t intervalTimer::_t8;
 timer_t intervalTimer::_t9;
+timer_t intervalTimer::_tAllDynamic;
 //OTSS
 timer_t intervalTimer::_t10;
 timer_t intervalTimer::_tTrafficeLight;
@@ -67,6 +68,7 @@ struct itimerspec intervalTimer::_it6;
 struct itimerspec intervalTimer::_it7;
 struct itimerspec intervalTimer::_it8;
 struct itimerspec intervalTimer::_it9;
+struct itimerspec intervalTimer::_itAllDynamic;
 //OTSS
 struct itimerspec intervalTimer::_it10;
 struct itimerspec intervalTimer::_itTrafficeLight;
@@ -121,7 +123,7 @@ void intervalTimer::TimersCreating(void)
     try
     {
 
-        struct sigevent _sig1, _sig2, _sig3, _sig4, _sig5, _sig6, _sig7, _sig8, _sig9;
+        struct sigevent _sig1, _sig2, _sig3, _sig4, _sig5, _sig6, _sig7, _sig8, _sig9, _sigAllDynamic;
         //OTSS
         struct sigevent _sig10;
 
@@ -176,6 +178,11 @@ void intervalTimer::TimersCreating(void)
         _sig9.sigev_signo = RTSIGNAL_Timer;
         _sig9.sigev_value.sival_int = 500;
         if ( timer_create( CLOCK_REALTIME, & _sig9, & _t9 ) ) exit( 1 );
+
+        _sigAllDynamic.sigev_notify = SIGEV_SIGNAL;
+        _sigAllDynamic.sigev_signo = RTSIGNAL_Timer;
+        _sigAllDynamic.sigev_value.sival_int = 610;
+        if (timer_create(CLOCK_REALTIME, &_sigAllDynamic, &_tAllDynamic)) exit(1);
 
         _sig10.sigev_notify = SIGEV_SIGNAL;
         _sig10.sigev_signo = RTSIGNAL_Timer;
@@ -1079,45 +1086,37 @@ void * intervalTimer::PTime(void *arg)
 
 
 
-                case( 500 ):                                      //\uFFFDï¿½ï¿½\uFFFD\uFFFD\uFFFD\uFFFDTOD,
-                    //vAllDynamicToTODCount()
-                    printf("Ctimer 500\n\n");
-                    memset(msg,0,sizeof(msg));
+                case (500):           
 
-                    usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-                    printf("printfMsg [In Dyn] currentStep:%d %d\n", usiCurrentSubphaseStep, Protocal5F1CStopStep);
-                    sprintf(msg,"printfMsg [In Dyn] currentStep:%d %d", usiCurrentSubphaseStep, Protocal5F1CStopStep);
-
-                    //smem.vWriteMsgToDOM(msg);
-                    memset(msg,0,sizeof(msg));
-
-                    if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )
+                    if (stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC) 
                     {
-                        // bereplace stc.Lock_to_Set_Next_Step();
-                        // stc.vSetNextStepNotUseSignal();
-                        // usleep(100);
+                        timer_gettime(_tAllDynamic, &_itAllDynamic);
+                        if (_itAllDynamic.it_value.tv_sec <= 0) 
+                        {
+                            printf("Lock_to_Set_Control_Strategy by Timer!!!\n");
+                            stc.Lock_to_Set_Control_Strategy(STRATEGY_TOD);
+                            stc.Lock_to_Set_Next_Step_for_5f1001();
 
-                        printf("Lock_to_Set_Control_Strategy by Timer!!!\n");
+                            sprintf(msg, "[Debug] Change to TOD at CTIMER.cpp, currentStep:%d",usiCurrentSubphaseStep);
+                            smem.vWriteMsgToDOM(msg);
+                            memset(msg, 0, sizeof(msg));
 
-                        stc.Lock_to_Set_Control_Strategy(STRATEGY_TOD);
+                            _ControlStrategy.DBit =
+                            smem.vGetUCData(TC92_ucControlStrategy);
+                            _ControlStrategy.switchBit.b1 = true;
+                            _ControlStrategy.switchBit.b5 = false;
+                            _ControlStrategy.switchBit.b6 = false;
 
-                        sprintf(msg,"[Debug] Change to TOD at CTIMER.cpp, currentStep:%d", usiCurrentSubphaseStep);
-                        smem.vWriteMsgToDOM(msg);
-                        memset(msg,0,sizeof(msg));
+                            smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
+                            smem.vSetINTData(TC92_iEffectTime, 0);
+                        } 
+                        else 
+                        {
+                            CSTC::Lock_to_Set_Next_Step();
+                        }
+                    }
 
-                        _ControlStrategy.DBit = smem.vGetUCData(TC92_ucControlStrategy);
-                        _ControlStrategy.switchBit.b1 = true;
-                        _ControlStrategy.switchBit.b5 = false;
-                        _ControlStrategy.switchBit.b6 = false;
-
-                        smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
-                        smem.vSetINTData(TC92_iEffectTime, 0);
-                    }//if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )
-                    printf("--------------------------------------------------------\n");
-                    //BT9512260001 START
-                    //smem.vWriteMsgToDOM(msg);
-                    //BT9512260001 END
-                    break;
+                break;
 
 
 //OTSS
@@ -1145,6 +1144,10 @@ void * intervalTimer::PTime(void *arg)
                     printf("Ctimer 601\n\n");
                     smem.cPedPushButton.QueryPEDState();//add Arwen
                     break;
+
+                case (610): //Eason_Ver4.4
+                    CSTC::SetAllDynamicFlag(false);
+                break;
 
 
                 default:
@@ -1446,7 +1449,7 @@ bool intervalTimer::TimersRead_BeforeResetCMOSTime(void)
           if(timer_gettime(_t8,&_it8)) return false;
         */
         if(timer_gettime(_t9,&_it9)) return false;
-
+        if(timer_gettime(_tAllDynamic, &_itAllDynamic)) return false;
         timer_settime(_t1, 0, &_itZero, NULL);
         timer_settime(_t2, 0, &_itZero, NULL);
         timer_settime(_t3, 0, &_itZero, NULL);
@@ -1456,6 +1459,7 @@ bool intervalTimer::TimersRead_BeforeResetCMOSTime(void)
         timer_settime(_t7, 0, &_itZero, NULL);
         timer_settime(_t8, 0, &_itZero, NULL);
         timer_settime(_t9, 0, &_itZero, NULL);
+        timer_settime(_tAllDynamic, 0, &_itZero, NULL);
         timer_settime(_t10, 0, &_itZero, NULL);
         timer_settime(_tTrafficeLight, 0, &_itZero, NULL);
         //timer_settime(_tBRTLightctrl, 0, &_itZero, NULL);
@@ -1489,6 +1493,7 @@ bool intervalTimer::TimersReset_AfterResetCMOSTime(void)
             if(timer_settime(_t8, 0, &_it8, NULL)) return false;
             */
             if(timer_settime(_t9, 0, &_it9, NULL)) return false;
+            if(timer_settime(_tAllDynamic, 0, &_itAllDynamic, NULL)) return false;
 
 //    smem.vSetTimerMutexCTIMER(false);
 
@@ -1647,7 +1652,7 @@ bool intervalTimer::vDBLockRequest(int iTMP)
 }
 
 //--------------------------------------------------------------------------
-bool intervalTimer::vAllDynamicToTODCount(unsigned short int siTMP)
+bool intervalTimer::vAllDynamicStepCount(unsigned short int siTMP)
 {
     try
     {
@@ -1822,6 +1827,17 @@ bool intervalTimer::vReportDynSegStatus_5F0D_inCtimer(void)
     }
     catch(...) {}
 }
+bool intervalTimer::vAllDynamicToTODCount(unsigned short int siTMP) { //Eason_Ver4.4
+  try {
+    _itAllDynamic.it_value.tv_sec = siTMP;
+    /* ot add 960802 */
+    _itAllDynamic.it_value.tv_nsec = 0;
+    _itAllDynamic.it_interval.tv_sec = 0;
+    _itAllDynamic.it_interval.tv_nsec = 0;
 
+    if (timer_settime(_tAllDynamic, 0, &_itAllDynamic, NULL)) exit(1);
+    if (siTMP > 0)CSTC::SetAllDynamicFlag(true);
+  } catch (...) {}
+}
 
 

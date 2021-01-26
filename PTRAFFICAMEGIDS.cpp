@@ -163,7 +163,7 @@ try{
        _ControlStrategy.switchBit.b6 == false    )
     {
       if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )
-        _intervalTimer.vAllDynamicToTODCount(10);
+        _intervalTimer.vAllDynamicStepCount(10);
   //      _intervalTimer.vAllDynamicToTODCount(EffectTime);
 
     }
@@ -179,25 +179,25 @@ try{
         int usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
         if(usiCurrentSubphaseStep == 0) {
           if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-            _intervalTimer.vAllDynamicToTODCount(EffectTime);
+            _intervalTimer.vAllDynamicStepCount(EffectTime);
           }
           else {
-            _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
+            _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
           }
         }
         else if(usiCurrentSubphaseStep == 1)
-          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
+          _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
         else if(usiCurrentSubphaseStep == 2)
           if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-            _intervalTimer.vAllDynamicToTODCount(EffectTime);
+            _intervalTimer.vAllDynamicStepCount(EffectTime);
           }
           else {
-            _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
+            _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
           }
         else if(usiCurrentSubphaseStep == 3)
-          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
+          _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
         else if(usiCurrentSubphaseStep == 4)
-          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
+          _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
 
       }
     }
@@ -784,26 +784,26 @@ try {
 
     if(usiCurrentSubphaseStep == 0) {
       if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-        _intervalTimer.vAllDynamicToTODCount(i5F10_EffectTime);
+        _intervalTimer.vAllDynamicStepCount(i5F10_EffectTime);
       }
       else {
-        _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
+        _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
       }
     }
     else if(usiCurrentSubphaseStep == 1)
-      _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
+      _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
     else if(usiCurrentSubphaseStep == 2) {
       if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-        _intervalTimer.vAllDynamicToTODCount(i5F10_EffectTime);
+        _intervalTimer.vAllDynamicStepCount(i5F10_EffectTime);
       }
       else {
-        _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
+        _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
       }
     }
     else if(usiCurrentSubphaseStep == 3)
-      _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
+      _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
     else if(usiCurrentSubphaseStep == 4)
-      _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
+      _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
 
 /*
       stc.vLockToSetControlStrategyToManualNotBySignal();

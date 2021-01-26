@@ -217,239 +217,88 @@ bool PTRAFFIC92TC::DoWorkViaPTraffic92(MESSAGEOK message)
     catch (...) {}
 }
 //---------------------------------------------------------------------------
-bool PTRAFFIC92TC::vWriteControlStrategy5F10(MESSAGEOK DataMessageIn)
-{
-    try
-    {
+bool PTRAFFIC92TC::vWriteControlStrategy5F10(MESSAGEOK DataMessageIn) { //Eason_Ver4.4
+  try {
+    DATA_Bit _ControlStrategy;
+    int EffectTime;
+    printf("[get TC 5F10]\n");
+    int iReturnCommandSet = smem.vGet0FCommandSet();//Get Oper Level
+    if (iReturnCommandSet <= 1) {
+      vReturnToCenterNACK(0x5F, 0x10, 0x80, 0x00);
+      printf("5f10 die in iReturnCommandSet <= 1\n");
 
-        unsigned short int usiAmegidsDevLCN;
-        DATA_Bit _ControlStrategy;
-        int EffectTime;
-        int iTmp;
-        unsigned short int usiTmp;
+      return false;
+    } // not include level "A""
+    if (DataMessageIn.packetLength < 14) {
+      vReturnToCenterNACK(0x5F, 0x10, 0x08, 0x00);
+      printf("5f10 die in packetLength < 14\n");
 
-        unsigned char data[32];
-        MESSAGEOK _MsgOK;
-        printf("[get TC 5F10]\n");
+      return false;
+    } else if (DataMessageIn.packetLength > 14) {
+      vReturnToCenterNACK(0x5F, 0x10, 0x08, DataMessageIn.packetLength - 12);
+      printf("5f10 die in packetLength > 14\n");
 
-        int iReturnCommandSet = smem.vGet0FCommandSet();                              //Get Oper Level
-
-        if(iReturnCommandSet <= 1)
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x80, 0x00);
-            return false;
-        } // not include level "A""
-        if( DataMessageIn.packetLength < 14 )
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x08, 0x00);
-            return false;
-        }
-        else if( DataMessageIn.packetLength > 14 )
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x08, DataMessageIn.packetLength - 12);
-            return false;
-        }
-
-        _ControlStrategy.DBit = DataMessageIn.packet[9];
-        EffectTime = DataMessageIn.packet[10] * 60;
-
-        if(iReturnCommandSet <= 1)
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x80, 0x00);    // not include level "A""
-            return false;
-        }
-        if( DataMessageIn.packetLength < 14 )
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x08, 0x00);
-            return false;
-        }
-        else if( DataMessageIn.packetLength > 14 )
-        {
-            vReturnToCenterNACK(0x5F, 0x10, 0x08, DataMessageIn.packetLength - 12);
-            return false;
-        }
-
-        if(1)    //not amegids mode.
-        {
-
-            printf("get TC 5F10, smem.vGetUCData(amegidsDynEnable) <= 0\n");
-            int iReturnCommandSet = smem.vGet0FCommandSet();                              //Get Oper Level
-            vReturnToCenterACK(0x5F, 0x10);
-
-            _ControlStrategy.DBit = DataMessageIn.packet[9];
-            EffectTime = DataMessageIn.packet[10] * 60;                                   //EffectTime save using Sec, but protocal using Min.
-
-            data[0] = 0x5F;
-            data[1] = 0x91;
-            data[2] = DataMessageIn.packet[9];
-            data[3] = DataMessageIn.packet[10];
-
-            smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
-            smem.vSetINTData(TC92_iEffectTime, EffectTime);
-
-            smem.vSet5F18EffectTime(EffectTime);
-
-            smem.vSetINTData(TC92_iEffectTime, EffectTime);
-
-            if(_ControlStrategy.switchBit.b1 == true &&
-                    _ControlStrategy.switchBit.b5 == false &&
-                    _ControlStrategy.switchBit.b6 == false    )
-            {
-//OT1000218        if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )
-//OT1000218          _intervalTimer.vAllDynamicToTODCount(10);
-
-                if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )   //OT20111020
-                {
-                    _intervalTimer.vAllDynamicToTODCount(10);
-                }
-
-                smem.vSet5F18EffectTime(2);
-            }
-            else if(_ControlStrategy.DBit == 0x30)
-            {
-                printf("Get Amegids 0F 10 30\n\n");
-                if( stc.Lock_to_LoadControlStrategy() == STRATEGY_TOD )
-                {
-                    printf("Get Amegids, now is TOD\n\n");
-//OT20111020
-                    //OT20111107 stc.Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC);
-                    printf("Get Amegids, now changing to ALLDYNAMIC\n\n");
-
-                    //OI20111107
-                    _intervalTimer.vAllDynamicToTODCount(EffectTime);
-
-                    /*
-                              int usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-                              if(usiCurrentSubphaseStep == 0) {
-                                if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-                                  printf("Set Sec:%d, stepID:%d\n", EffectTime, usiCurrentSubphaseStep);
-                                  _intervalTimer.vAllDynamicToTODCount(EffectTime);
-                                }
-                                else {
-                                  usiTmp = stc.vGetUSIData(CSTC_exec_plan_green_time);
-                                  printf("Set Sec:%d, StepID:%d\n", usiTmp, usiCurrentSubphaseStep);
-                                  _intervalTimer.vAllDynamicToTODCount(usiTmp);
-                                }
-                              }
-                              else if(usiCurrentSubphaseStep == 1) {
-                                usiTmp = stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time);
-                                printf("Set Sec:%d, StepID:%d\n", usiTmp, usiCurrentSubphaseStep);
-                                _intervalTimer.vAllDynamicToTODCount(usiTmp);
-                              }
-                              else if(usiCurrentSubphaseStep == 2) {
-                                if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-                                  printf("Set Sec:%d, StepID:%d, in Protocal5F1CStopStep\n", EffectTime, usiCurrentSubphaseStep);
-                                  _intervalTimer.vAllDynamicToTODCount(EffectTime);
-                                }
-                                else {
-                                  usiTmp = stc.vGetUSIData(CSTC_exec_plan_pedred_time);
-                                  printf("Set Sec:%d, StepID:%d\n", usiTmp, usiCurrentSubphaseStep);
-                                  _intervalTimer.vAllDynamicToTODCount(usiTmp);
-                                }
-                              }
-                              else if(usiCurrentSubphaseStep == 3) {
-                                usiTmp = stc.vGetUSIData(CSTC_exec_plan_yellow_time);
-                                printf("Set Sec:%d, StepID:%d\n", usiTmp, usiCurrentSubphaseStep);
-                                _intervalTimer.vAllDynamicToTODCount(usiTmp);
-                              }
-                              else if(usiCurrentSubphaseStep == 4) {
-                                usiTmp = stc.vGetUSIData(CSTC_exec_plan_allred_time);
-                                printf("Set Sec:%d, StepID:%d\n", usiTmp, usiCurrentSubphaseStep);
-                                _intervalTimer.vAllDynamicToTODCount(usiTmp);
-                              }
-                    */
-
-                }
-            }
-
-
-
-//OT1000218
-            /* disable all
-
-              //  _ControlStrategy.DBit = smem.vGetUCData(TC92_ucControlStrategy);              //Read Data from share memory
-            //  EffectTime = smem.vGetINTData(TC92_iEffectTime);
-                  printf("get TC 5F10, smem.vGetUCData(amegidsDynEnable) <= 0\n");
-                  int iReturnCommandSet = smem.vGet0FCommandSet();                              //Get Oper Level
-
-                  vReturnToCenterACK(0x5F, 0x10);
-
-                  _ControlStrategy.DBit = DataMessageIn.packet[9];
-                  EffectTime = DataMessageIn.packet[10] * 60;                                   //EffectTime save using Sec, but protocal using Min.
-
-                  data[0] = 0x5F;
-                  data[1] = 0x91;
-                  data[2] = DataMessageIn.packet[9];
-                  data[3] = DataMessageIn.packet[10];
-
-                  smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
-                  smem.vSetINTData(TC92_iEffectTime, EffectTime);
-                //then save!?
-
-            //For disable Dynamic
-
-                  if(MACHINELOCATE == MACHINELOCATEATYULIN)                                     // For CCJ
-                  {
-
-                    _MsgOK = oDataToMessageOK.vPackageINFOTo92Protocol(data, 4, true);
-                    _MsgOK.InnerOrOutWard = cOutWard;
-                    writeJob.WritePhysicalOut(_MsgOK.packet, _MsgOK.packetLength, DEVICECCJDYNCTL);
-
-                  } else {
-
-                    if(_ControlStrategy.switchBit.b1 == true &&
-                       _ControlStrategy.switchBit.b5 == false &&
-                       _ControlStrategy.switchBit.b6 == false    )
-                    {
-                      if( stc.Lock_to_LoadControlStrategy() == STRATEGY_ALLDYNAMIC )
-                        _intervalTimer.vAllDynamicToTODCount(10);
-                //      _intervalTimer.vAllDynamicToTODCount(EffectTime);
-
-                    }
-
-                    else if(_ControlStrategy.DBit == 0x30)
-                    {
-                      printf("Get Amegids 0F 10 30\n\n");
-                      if( stc.Lock_to_LoadControlStrategy() == STRATEGY_TOD ) {
-                        printf("Get Amegids, now is TOD\n\n");
-                        stc.Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC);
-                        printf("Get Amegids, now changing to ALLDYNAMIC\n\n");
-
-                        int usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-                        if(usiCurrentSubphaseStep == 0) {
-                          if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-                            _intervalTimer.vAllDynamicToTODCount(EffectTime);
-                          }
-                          else {
-                            _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
-                          }
-                        }
-                        else if(usiCurrentSubphaseStep == 1)
-                          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
-                        else if(usiCurrentSubphaseStep == 2)
-                          if(Protocal5F1CStopStep == usiCurrentSubphaseStep) {
-                            _intervalTimer.vAllDynamicToTODCount(EffectTime);
-                          }
-                          else {
-                            _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
-                          }
-                        else if(usiCurrentSubphaseStep == 3)
-                          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
-                        else if(usiCurrentSubphaseStep == 4)
-                          _intervalTimer.vAllDynamicToTODCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
-
-                      }
-                    }
-                  }
-                  */
-
-
-        }
-
-        return true;
-
+      return false;
     }
-    catch(...) {}
+
+      vReturnToCenterACK(0x5F, 0x10);
+      _ControlStrategy.DBit = DataMessageIn.packet[9];
+      EffectTime = DataMessageIn.packet[10] * 60;
+      smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
+      smem.vSetINTData(TC92_iEffectTime, EffectTime);
+      smem.vSet5F18EffectTime(EffectTime);
+      
+      switch (_ControlStrategy.DBit)
+      {
+        case 0x01:
+            int i;
+            i = _intervalTimer.vGetEffectTime();
+            _intervalTimer.vAllDynamicStepCount(i+3);
+            _intervalTimer.vAllDynamicToTODCount(i+3);
+            smem.vSet5F18EffectTime(i+3);
+            CSTC::_5f18_Debug_SW = false;
+            stc.Lock_to_Load_Segment_for_Panel(stc.vGetUSIData(CSTC_exec_segment_current_seg_no));
+            int Count = GetNowPlanOfSegtypeCount();
+            smem.vSetINTData(TC92_PlanOneTime5F18_PlanID,stc._panel_segment._ptr_seg_exec_time[Count]._planid);
+            printf("exec_planid=%d\n",stc._panel_segment._ptr_seg_exec_time[Count]._planid);
+            printf("exec_planid=%d\n",stc._panel_segment._ptr_seg_exec_time[Count]._planid);
+            printf("exec_planid=%d\n",stc._panel_segment._ptr_seg_exec_time[Count]._planid); //Debug print
+          break;
+
+        // case 0x08:
+        //     CSTC::_5f18_Debug_SW = true;
+        //     smem.vSet5F18EffectTime(EffectTime);
+        //     printf("Now 5F18 can change PlanID\n");
+        //   break;
+
+        case 0x30:
+              smem.vSetINTData(TC92_PlanOneTime5F18_PlanID,stc.vGetUSIData(CSTC_exec_plan_plan_ID)); //set 5F18_PlanID = current PlanID
+              if (!CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC))
+              {
+                _intervalTimer.vAllDynamicStepCount(_intervalTimer.vGetEffectTime());
+              }
+              else
+              {
+                _intervalTimer.vAllDynamicStepCount(stc.vGet5F10BootStepTime());
+              }
+              CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC);
+              printf("Now is changing to ALLDYNAMIC\n\n");
+              // _intervalTimer.vAllDynamicToTODCount(stc.vGet5F10BootStepTime()); //set current Step time
+              _intervalTimer.vAllDynamicMinchunCount(EffectTime); //set timer
+              CSTC::_5f18_Debug_SW = false;
+              printf("exec_planid=%d\n",stc.vGetUSIData(CSTC_exec_plan_plan_ID));
+              printf("exec_planid=%d\n",stc.vGetUSIData(CSTC_exec_plan_plan_ID));
+              printf("exec_planid=%d\n",stc.vGetUSIData(CSTC_exec_plan_plan_ID)); //Debug print
+          break;
+             
+        default:
+          break;
+      }
+
+    return true;
+
+  }
+  catch (...) {}
 }
 
 //---------------------------------------------------------------------------
@@ -4673,3 +4522,30 @@ int PTRAFFIC92TC::vReturnToCenterNACK(unsigned char ucDevCode,
 //
 // } catch(...){}
 //}
+int PTRAFFIC92TC::GetNowPlanOfSegtypeCount(void)
+{
+try {
+    int count=0;
+    unsigned short cHour=0,cMin=0;
+    unsigned int usiSegTime;
+    unsigned int nowTime;
+    time_t currentTime=time(NULL);
+    struct tm *now=localtime(&currentTime);
+    cHour=now->tm_hour;
+    cMin=now->tm_min;
+    //�H�W�o��{�b�ɶ�
+
+    //OT Debug 950815
+    nowTime = cHour*3600 + cMin*60;
+    for (int i=0;i<stc._panel_segment._segment_count;i++) {                    //�H�{���ɬq�@�@���
+      usiSegTime = stc._panel_segment._ptr_seg_exec_time[i]._hour*3600 + stc._panel_segment._ptr_seg_exec_time[i]._minute*60;
+//      printf("printfMsg nowTime:%d, usiSegTime:%d\n", nowTime, usiSegTime);
+      if(nowTime >= usiSegTime) {
+//        printf("i=%d\n", i);
+        count++;
+      }
+    }
+    return count-1;
+}
+catch(...){}
+}

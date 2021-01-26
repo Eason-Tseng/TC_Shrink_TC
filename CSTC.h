@@ -306,7 +306,7 @@ class CSTC
     static unsigned char ucJumpSubPhase;
     static unsigned short int usiTrainComingSec;
     static unsigned short int usiLockPhaseSec;
-
+    static bool AllDynamicFlag; //Eason_Ver4.4
     static bool m_segmentsave;
     static int m_segmentCount;
 
@@ -338,9 +338,11 @@ ControlStrategy Get_current_stratage();
     static pthread_t _stc_thread_light_control;
 
     static CTrafficAnalyzer traffic_analyzer;
-
+    static bool _5f18_Debug_SW; //Eason_Ver4.4
     CSTC(void);
     static void ReadAllData(void);
+    static bool GetAllDynamicFlag(); //Eason_Ver4.4
+    static void SetAllDynamicFlag(bool allDynamicFlag); //Eason_Ver4.4
     static bool AllRed5Seconds(void);
 
     static bool SetDefaultLCNPhaseOrder(unsigned short int lcn, unsigned short int phase_order);

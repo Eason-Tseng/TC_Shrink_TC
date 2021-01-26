@@ -11,11 +11,11 @@ class intervalTimer
     static void TimersSetting(void);
     static pthread_t thread_forVDTimer;
 
-    static timer_t _t1, _t2, _t3, _t4, _t5, _t6, _t7, _t8, _t9;
+    static timer_t _t1, _t2, _t3, _t4, _t5, _t6, _t7, _t8, _t9, _tAllDynamic;
 //OTSS++
     static timer_t _t10;                                                        // For SS XG
     static timer_t _tTrafficeLight;
-    static struct itimerspec _it1, _it2, _it3, _it4, _it5, _it6, _it7, _it8, _it9;
+    static struct itimerspec _it1, _it2, _it3, _it4, _it5, _it6, _it7, _it8, _it9, _itAllDynamic;
     static struct itimerspec _it10;                                             // For SS XG
     static struct itimerspec _itTrafficeLight;
 //OTSS--
@@ -52,7 +52,8 @@ class intervalTimer
         bool vCommuncationReset(int);
         bool vDBLockRequest(int);
 //        bool vSend92VD_6F02(void);
-        bool vAllDynamicToTODCount(unsigned short int);
+        bool vAllDynamicStepCount(unsigned short int);
+        bool vAllDynamicToTODCount(unsigned short int); //Eason_Ver4.4
 
         unsigned short int vGetEffectTime(void);
 

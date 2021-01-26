@@ -12,7 +12,7 @@ class PTRAFFIC92TC
 
         PTRAFFIC92TC(void);
         ~PTRAFFIC92TC(void);
-        bool DoWorkViaPTraffic92(MESSAGEOK);                                    //®Ú¾ÚPTraffic92¨Óªº°T®§§@¨Æ±¡
+        bool DoWorkViaPTraffic92(MESSAGEOK);                                    //ï¿½Ú¾ï¿½PTraffic92ï¿½Óªï¿½ï¿½Tï¿½ï¿½ï¿½@ï¿½Æ±ï¿½
 
         bool vWriteControlStrategy5F10(MESSAGEOK);
         bool vQurryControlStrategy5F40(MESSAGEOK);  //with 5FC0
@@ -72,6 +72,7 @@ class PTRAFFIC92TC
 
         int vReturnToCenterACK(unsigned char, unsigned char);
         int vReturnToCenterNACK(unsigned char, unsigned char, unsigned char, unsigned char);
+        int GetNowPlanOfSegtypeCount(void);
 
 };
 //---------------------------------------------------------------------------

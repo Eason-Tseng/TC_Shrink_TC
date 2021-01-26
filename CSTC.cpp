@@ -133,6 +133,8 @@ unsigned long int CSTC::inperiodno=0;
 bool CSTC::PlanUpdate = false;
 bool CSTC::SegmentTypeUpdate = false;
 bool CSTC::ReverseTimeDataUpdate = false;
+bool CSTC::_5f18_Debug_SW = false; //Eason_Ver4.4
+bool CSTC::AllDynamicFlag = false; //Eason_Ver4.4
 unsigned short int CSTC::OLD_TOD_PLAN_ID = 0;
 unsigned short int CSTC::NEW_TOD_PLAN_ID = 0;
 /*otaru0514--*/
@@ -1564,6 +1566,7 @@ void * CSTC::_stc_thread_light_control_func( void * )
                             ReSetExtendTimer();
                             SetLightAfterExtendTimerReSet();
                             if (smem.vGetBOOLData(TC_CCTActuate_TOD_Running) == true) vCheckPhaseForTFDActuateExtendTime_5FCF();     
+                            smem.vSetBOOLData(TC_CCT_PedSW_Check,false);
                         }
                     }  
 
@@ -5305,6 +5308,8 @@ void CSTC::CalculateCompensation_in_TOD(void)
             return;
         }
 
+        if (GetAllDynamicFlag())return;
+
         //OT20111107
         if(smem.vGetThisCycleRunCCJPlan5F18() == true)
         {
@@ -6982,7 +6987,7 @@ void CSTC::CalculateAndSendRedCount(const short int diff)    //聯嘉 紅燈倒�
             }
         }
 
-        //OT20140329, only left version light!
+        // //OT20140329, only left version light!
         // int last_i;
         // bool bHaveOnlyLeft;
         // printf("iSubCnt:%d, iSignalCnt:%d\n", iSubCnt, iSignalCnt);
@@ -15945,4 +15950,12 @@ ControlStrategy CSTC::Get_current_stratage()
 ControlStrategy CSTC::Get_old_stratage()
 {
     return _old_strategy;
+}
+bool CSTC::GetAllDynamicFlag() //Eason_Ver3.4
+{
+  return AllDynamicFlag;
+}
+void CSTC::SetAllDynamicFlag(bool allDynamicFlag) //Eason_Ver3.4
+{
+  AllDynamicFlag = allDynamicFlag;
 }
