@@ -6983,39 +6983,39 @@ void CSTC::CalculateAndSendRedCount(const short int diff)    //聯嘉 紅燈倒�
         }
 
         //OT20140329, only left version light!
-        int last_i;
-        bool bHaveOnlyLeft;
-        printf("iSubCnt:%d, iSignalCnt:%d\n", iSubCnt, iSignalCnt);
-        for(int i = 0; i < iSubCnt; i++)
-        {
-            for(int j = 0; j < iSignalCnt; j++)
-            {
-                bHaveOnlyLeft = false;
-                if(j == 0)
-                {
-                    printf("light:%d:%X\n", i, _exec_phase._ptr_subphase_step_signal_status[i][0][j]);
-                    printf("light:%d:%X\n", i, (_exec_phase._ptr_subphase_step_signal_status[i][0][j] & 0x03F0));
-                }
-                if( (_exec_phase._ptr_subphase_step_signal_status[i][0][j] & 0x03F0) == 0x0030 )
-                {
-                    bHaveOnlyLeft = true;
-                }
+        // int last_i;
+        // bool bHaveOnlyLeft;
+        // printf("iSubCnt:%d, iSignalCnt:%d\n", iSubCnt, iSignalCnt);
+        // for(int i = 0; i < iSubCnt; i++)
+        // {
+        //     for(int j = 0; j < iSignalCnt; j++)
+        //     {
+        //         bHaveOnlyLeft = false;
+        //         if(j == 0)
+        //         {
+        //             printf("light:%d:%X\n", i, _exec_phase._ptr_subphase_step_signal_status[i][0][j]);
+        //             printf("light:%d:%X\n", i, (_exec_phase._ptr_subphase_step_signal_status[i][0][j] & 0x03F0));
+        //         }
+        //         if( (_exec_phase._ptr_subphase_step_signal_status[i][0][j] & 0x03F0) == 0x0030 )
+        //         {
+        //             bHaveOnlyLeft = true;
+        //         }
 
-                if(bHaveOnlyLeft == true)
-                {
-                    printf("have only left green in: %d\n", i);
-                    last_i = i - 1;
-                    if(last_i < 0)
-                    {
-                        last_i = iSubCnt - 1;
-                    }
-                    if(bCountIF[last_i][j] == true)
-                    {
-                        bCountIF[last_i][j] = false;
-                    }
-                }
-            }
-        }
+        //         if(bHaveOnlyLeft == true)
+        //         {
+        //             printf("have only left green in: %d\n", i);
+        //             last_i = i - 1;
+        //             if(last_i < 0)
+        //             {
+        //                 last_i = iSubCnt - 1;
+        //             }
+        //             if(bCountIF[last_i][j] == true)
+        //             {
+        //                 bCountIF[last_i][j] = false;
+        //             }
+        //         }
+        //     }
+        // }
 
         iSubCalCntTmp = 0;
         if( _exec_plan._phase_order==FLASH_PHASEORDER || _exec_plan._phase_order==ALLRED_PHASEORDER
