@@ -19,6 +19,15 @@ typedef struct MESSAGEWAITREPONSE
     int retryCount;
     time_t sendTime;
 } MESSAGEWAITREPONSE;
+typedef struct Dyn_5F1C_record
+{
+    bool isNew;//record 5F1c reserve change step second
+    bool DoubleCheck;
+    int ReserveSubphase;
+    int ReserveStep;
+    int ReserveSec;
+
+}Dyn_5F1C_record;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 class SMEM
@@ -126,7 +135,8 @@ public:
 
 
     struct itimerspec _ShareSimCycle;
-
+    void setDynJump_subphaseID(int subphaseID); //Eason_Ver4.4
+    void setDynJump_subphase(bool flag); //Eason_Ver4.4
     bool vSaveShareMemoryDataToDOM(void);
 
     bool vSetSimIntervalTime(itimerspec);
@@ -399,7 +409,7 @@ public:
     bool vLogTrafficLightTime(void);
     time_t vGetLastTrafficeLightTime(void);
     bool vSetTrafficLightBoardConnectStatus(bool);
-
+    Dyn_5F1C_record dyn_5F1C_reserve_value; //Eason_Ver4.4
     int vSystemClockTimetoAct(void);
 
     int ReadPEDInfo(void);//add Arwen
@@ -1012,7 +1022,8 @@ private:
     int temperature;
     int humidity_record;
     bool com3_GPS_state;
-
+    int JumpTo_subphaseID; //Eason_Ver4.4
+    bool Alldyn_jump_subphase_flag; //Eason_Ver4.4
 
 };
 //---------------------------------------------------------------------------

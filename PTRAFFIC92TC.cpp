@@ -284,7 +284,7 @@ bool PTRAFFIC92TC::vWriteControlStrategy5F10(MESSAGEOK DataMessageIn) { //Eason_
               CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC);
               printf("Now is changing to ALLDYNAMIC\n\n");
               // _intervalTimer.vAllDynamicToTODCount(stc.vGet5F10BootStepTime()); //set current Step time
-              _intervalTimer.vAllDynamicMinchunCount(EffectTime); //set timer
+              _intervalTimer.vAllDynamicToTODCount(EffectTime); //set timer
               CSTC::_5f18_Debug_SW = false;
               printf("exec_planid=%d\n",stc.vGetUSIData(CSTC_exec_plan_plan_ID));
               printf("exec_planid=%d\n",stc.vGetUSIData(CSTC_exec_plan_plan_ID));
@@ -3855,312 +3855,151 @@ try {
 
 //OT20111107
 //-------------------------------------------------------------------
-bool PTRAFFIC92TC::vGoToNextPhaseStepControl_5F1C(MESSAGEOK DataMessageIn)
-{
-    try
-    {
-        int iTmp;
-        short int siSubPhaseID, siStepID, siEffectTime;
-        bool bFlag1, bFlag2;
-        siSubPhaseID = DataMessageIn.packet[9];
-        siStepID = DataMessageIn.packet[10];
-        siEffectTime = DataMessageIn.packet[11];
-        unsigned short int usiCSTC_RunningPhaseCurrentPhase = stc.vGetUSIData(CSTC_exec_plan_phase_order);  //Should +1
-        unsigned short int usiCSTC_RunningPhaseCurrentSubphase = stc.vGetUSIData(CSTC_exec_phase_current_subphase);  //Should +1
-        unsigned short int usiCSTC_RunningPhaseCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-        unsigned short int usiCSTC_RunningPhaseCurrentSubphaseStepGreenTime = stc.vGetUSIData(CSTC_exec_plan_green_time_compesated);
+bool PTRAFFIC92TC::vGoToNextPhaseStepControl_5F1C(MESSAGEOK DataMessageIn) { //Eason_Ver3.4
+  try {
+    printf("vGoToNextPhaseStepControl_5F1C\033[0;40;31m\n");
+    printf("vGoToNextPhaseStepControl_5F1C\033[0;40;31m\n");
+    printf("vGoToNextPhaseStepControl_5F1C\033[0;40;31m\n");
+    printf("vGoToNextPhaseStepControl_5F1C\033[0;40;31m\n");
+    printf("vGoToNextPhaseStepControl_5F1C\033[0;40;31m\n");
+    DATA_Bit uc5F10_ControlStrategy;
+    short int siSubPhaseID, siStepID, siEffectTime;
+    siSubPhaseID = DataMessageIn.packet[9];
+    siStepID = DataMessageIn.packet[10];
+    siEffectTime = DataMessageIn.packet[11];
+    char msg[256];
+    unsigned short int usiCurrentSubphaseStep;
+    int iReturnCommandSet = smem.vGet0FCommandSet();
+    if (iReturnCommandSet <= 2) {
+      vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
+      printf("die in iReturnCommandSet <= 2\n");
 
-        //OT20140214
-        unsigned short int usiCSTC_RunningPlanMaxGreen = stc.vGetUSIData(CSTC_exec_plan_maxgreen_time);
-        unsigned short int usiCSTC_RunningPlanMinGreen = stc.vGetUSIData(CSTC_exec_plan_mingreen_time);
-        unsigned short int usiCSTC_RunningStepTime = smem.vGetStepRunCounter();
-
-        char msg[256];
-        char cTMP[128];
-        int newTime = -1;
-        int iReturnCommandSet = smem.vGet0FCommandSet();
-
-
-        printf("\n\n\n\nBUS actuate START!\n\n\n\n");
-
-        if(siEffectTime == 255)    //car leave
-        {
-            smem.vSet5F1CEffectTime(siSubPhaseID-1, 0);
-            if(usiCSTC_RunningPhaseCurrentSubphaseStep == 0)
-            {
-                if(usiCSTC_RunningPhaseCurrentSubphaseStepGreenTime > usiCSTC_RunningStepTime)
-                {
-                    iTmp = usiCSTC_RunningPhaseCurrentSubphaseStepGreenTime - usiCSTC_RunningStepTime;
-                    stc.vSetTODCurrentTime(iTmp);
-                    newTime = iTmp;
-                }
-                else
-                {
-                    stc.vSetTODCurrentTime(1);
-                    newTime = 1;
-                }
-            }
-            smem.vSetCurrentSubphaseRunning5F1C(usiCSTC_RunningPhaseCurrentSubphase, false);
-
-        }
-        else
-        {
-
-            bFlag1 = false;
-            bFlag2 = false;
-            if((usiCSTC_RunningPhaseCurrentSubphase+1) == siSubPhaseID)
-            {
-                bFlag1 = true;
-            }
-            if(usiCSTC_RunningPhaseCurrentSubphaseStep == 0 && siStepID == 1)
-            {
-                bFlag2 = true;
-            }
-            if(bFlag1 == true && bFlag2 == true)
-            {
-                /*
-                        printf("siEffectTime:%d\n", siEffectTime);
-                        printf("usiCSTC_RunningPlanMinGreen:%d\n", usiCSTC_RunningPlanMinGreen);
-                        printf("usiCSTC_RunningStepTime:%d\n", usiCSTC_RunningStepTime);
-                        printf("usiCSTC_RunningPlanMaxGreen:%d\n", usiCSTC_RunningPlanMaxGreen);
-                */
-                // in current step
-                smem.vSetCurrentSubphaseRunning5F1C(usiCSTC_RunningPhaseCurrentSubphase, true);
-                //should set effect time.
-                if( (siEffectTime+usiCSTC_RunningStepTime) <= usiCSTC_RunningPlanMaxGreen)
-                {
-                    if((siEffectTime+usiCSTC_RunningStepTime) >= usiCSTC_RunningPlanMinGreen)
-                    {
-                        stc.vSetTODCurrentTime(siEffectTime);
-                        newTime = siEffectTime;
-                    }
-                    else
-                    {
-                        iTmp = usiCSTC_RunningPlanMinGreen - usiCSTC_RunningStepTime;  //run min green
-                        if(iTmp > 0)
-                        {
-                            stc.vSetTODCurrentTime(iTmp);
-                            newTime = iTmp;
-                        }
-                    }
-                }
-                else
-                {
-                    iTmp = usiCSTC_RunningPlanMaxGreen - usiCSTC_RunningStepTime;  //run max green
-                    if(iTmp > 0)
-                    {
-                        stc.vSetTODCurrentTime(iTmp);
-                        newTime = iTmp;
-                    }
-                    else
-                    {
-                        stc.vSetTODCurrentTime(1);
-                        newTime = 1;
-                    }
-                }
-            }
-            else      // diff phase
-            {
-                // 1. set this subphase to min green
-                if(smem.vGetCurrentSubphaseRunning5F1C(usiCSTC_RunningPhaseCurrentSubphase) == false)
-                {
-                    if(usiCSTC_RunningPhaseCurrentSubphaseStep == 0)
-                    {
-                        printf("in diff 5F1C subphase\n");
-                        if(usiCSTC_RunningStepTime > usiCSTC_RunningPlanMinGreen)
-                        {
-                            //force to next step.
-                            //stc.Lock_to_Set_Next_Step();  //not effect
-                            stc.vSetTODCurrentTime(1);
-                            newTime = 1;
-                        }
-                        else
-                        {
-                            printf("usiCSTC_RunningPlanMinGreen:%d\n", usiCSTC_RunningPlanMinGreen);
-                            printf("usiCSTC_RunningStepTime:%d\n", usiCSTC_RunningStepTime);
-                            iTmp = usiCSTC_RunningPlanMinGreen - usiCSTC_RunningStepTime;  //run min green
-                            if(iTmp > 0)
-                            {
-                                stc.vSetTODCurrentTime(iTmp);
-                                newTime = iTmp;
-                            }
-                        }
-                    }
-                }
-                // 2. set other subphase to min green
-                smem.vSet5F1CEffectTime(siSubPhaseID-1, siEffectTime);
-            }
-
-        }
-
-        //OT20140304
-        bzero(cTMP, 128);
-        sprintf(cTMP, "get 5F1C, now sp:%d, st:%d, rt:%d, protocol sp:%d, st:%d, et:%d, new t:%d, ",
-                usiCSTC_RunningPhaseCurrentSubphase+1, usiCSTC_RunningPhaseCurrentSubphaseStep+1,
-                usiCSTC_RunningStepTime,
-                siSubPhaseID, siStepID, siEffectTime, newTime );
-        smem.vWriteMsgToTmp(cTMP);
-
-//----- another
-        if (smem.Restartcheck5F1C == false)
-        {
-            smem.Restartcheck5F1C = true ;
-            if (smem.vGetBOOLData(TC_Actuateautoswitch) == true)
-            {
-                if (smem.GetcFace() != cLOGIN && smem.GetcFace() != cLOGO)
-                {
-                    printf("\n\n\n\nBUS actuate START!\n\n\n\n");
-                    screenActuateArwenManyStatus.DisplayActuateArwenManyStatus();//BUS觸動
-                }
-            }
-            else
-            {
-            }
-
-            /*if (siSubPhaseID == 0xFF && siStepID == 0xFF){
-                 stc.Fixgreen = true;
-             }
-             else{
-                 stc.Fixgreen = false;
-             }
-
-             if (stc.Fixgreen == true){
-                 if (usiCSTC_RunningPhaseCurrentSubphase == 0 && usiCSTC_RunningPhaseCurrentSubphaseStep == 0){
-                     unsigned short int usiStepSec = stc.vGetStepTime();
-                     stc.vExtendGreenTime(siEffectTime,stc.Fixgreen);
-                     stc.Fixgreen = false;
-                     vReturnToCenterACK(0x5F, 0x1C);
-                 }
-                 if (usiCSTC_RunningPhaseCurrentSubphase == 1 && usiCSTC_RunningPhaseCurrentSubphaseStep == 0){
-                     unsigned short int Nowsteptime = smem.vGetActRunningGreenTime();
-                     short int Mingreen = stc.vGetAdjCurrentMinGreen() ;
-                     printf("\nNowsteptime= %d \n Mingreen = %d \n",Nowsteptime,Mingreen);
-
-                     if(Mingreen > Nowsteptime)
-                     {
-                         printf("\nNowsteptime= %d < Mingreen = %d \n",Nowsteptime,Mingreen);
-                         stc.vExtendGreenTime((Mingreen - Nowsteptime),stc.Fixgreen);
-                     }
-                     else{
-                         smem.vSetBOOLData(NextStepForceEnable, true);
-                         stc.vSetNextStepNotUseSignal();
-                     }
-                     stc.Fixgreen = false ;
-                     vReturnToCenterACK(0x5F, 0x1C); return false;
-                 }
-                 if (usiCSTC_RunningPhaseCurrentSubphase == 0 && usiCSTC_RunningPhaseCurrentSubphaseStep != 0){
-                     //printf("\n\n\n\n 3333 \n 3333 \n\n\n\n\n");
-                     vReturnToCenterACK(0x5F, 0x1C); return false;
-                 }
-                 if (usiCSTC_RunningPhaseCurrentSubphase != 0 && usiCSTC_RunningPhaseCurrentSubphaseStep != 0){
-                     //printf("\n\n\n\n 4444 \n 4444 \n\n\n\n\n");
-                     vReturnToCenterNACK(0x5F, 0x1C, 0x02, 0x00); return false;
-                 }
-             }*/
-            if (iReturnCommandSet <= 2 )
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
-                return false;
-            }
-
-            if ( DataMessageIn.packetLength < 15 )
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x08, 0x00);
-                return false;
-            }
-            else if ( DataMessageIn.packetLength > 15 )
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x08, DataMessageIn.packetLength - 15);
-                return false;
-            }
-
-            if(siSubPhaseID > 8)
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x01);
-                return false;
-            }
-            if(siStepID > 8)
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x02);
-                return false;
-            }
-
-            DATA_Bit uc5F10_ControlStrategy;
-            int i5F10_EffectTime;
-
-            uc5F10_ControlStrategy.DBit = smem.vGetUCData(TC92_ucControlStrategy);
-            i5F10_EffectTime = smem.vGetINTData(TC92_iEffectTime);
-
-            memset(msg,0,sizeof(msg));
-            sprintf(msg,"[Debug] 5F1C: siSubPhaseID:%d, siStepID:%d, siEffectTime:%d, uc5F10_ControlStrategy:%x, ", siSubPhaseID, siStepID, siEffectTime, uc5F10_ControlStrategy.DBit);
-            smem.vWriteMsgToDOM(msg);
-
-
-            if(uc5F10_ControlStrategy.switchBit.b5 == false && uc5F10_ControlStrategy.switchBit.b6 == false)
-            {
-                memset(msg,0,sizeof(msg));
-                sprintf(msg,"[Debug] 5F1C: bit 5/6 all false");
-                smem.vWriteMsgToDOM(msg);
-
-                vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
-                return false;
-            }
-            if(smem.vGet5F18EffectTime() <= 0)
-            {
-                memset(msg,0,sizeof(msg));
-                sprintf(msg,"[Debug] 5F18: Effect time Error");
-                smem.vWriteMsgToDOM(msg);
-                vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
-                return false;
-            }
-
-            if(siSubPhaseID == 0 && siStepID == 0 && siEffectTime == 0)    //Go To Next Step
-            {
-//      stc.Lock_to_Set_Control_Strategy(STRATEGY_MANUAL);
-//      stc.Lock_to_Set_Control`_Strategy(STRATEGY_TOD);
-
-//OT20111107      if (!stc.Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC)) {
-                if(1)
-                {
-                    int usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-                    if(usiCurrentSubphaseStep <= 2)
-                    {
-                        stc.Lock_to_Set_Next_Step();
-                        usleep(50);
-                        printf("IN 5F1C, usiCurrentSubphaseStep:%d, Protocal5F1CStopStep:%d\n", usiCurrentSubphaseStep, Protocal5F1CStopStep);
-                    }
-                }
-
-                return true;
-            }
-
-            if(siSubPhaseID == 0)
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x01);    //¿ù»~§PÂ_
-                return false;
-            }
-            if(siStepID == 0)
-            {
-                vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x02);
-                return false;
-            }
-
-            unsigned short int usiCSTC_RunningPhaseCurrentPhase = stc.vGetUSIData(CSTC_exec_plan_phase_order);  //Should +1
-            unsigned short int usiCSTC_RunningPhaseCurrentSubphase = stc.vGetUSIData(CSTC_exec_phase_current_subphase);  //Should +1
-            unsigned short int usiCSTC_RunningPhaseCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
-            stc.Lock_to_Load_Phase_for_Center(usiCSTC_RunningPhaseCurrentPhase);
-
-        }
-        else
-        {
-            printf("\n\n\n\n you can't call 5F1C again !!!\n\n\n\n");
-            // printf("\n\n\n\n you can't call 5F1C again !!!\n\n\n\n");
-        }
-
-        return false;
-
+      return false;
     }
-    catch(...) {}
+
+    if (DataMessageIn.packetLength < 15) {
+      vReturnToCenterNACK(0x5F, 0x1C, 0x08, 0x00);
+      printf("die in too short packetlength\n");
+      return false;
+    } else if (DataMessageIn.packetLength > 15) {
+      vReturnToCenterNACK(0x5F, 0x1C, 0x08, DataMessageIn.packetLength - 15);
+      printf("die in too long packetlength\n");
+      return false;
+    }
+
+    if (siSubPhaseID > 8) {
+      vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x01);
+      printf("die in wrong subphaseID\n");
+      return false;
+    }
+    if (siStepID > 8) {
+      vReturnToCenterNACK(0x5F, 0x1C, 0x04, 0x02);
+      printf("die in wrong stepID\n");
+
+      return false;
+    }
+
+    int i5F10_EffectTime;
+    uc5F10_ControlStrategy.DBit = smem.vGetUCData(TC92_ucControlStrategy);
+    i5F10_EffectTime = smem.vGetINTData(TC92_iEffectTime);
+
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg,
+            "[Debug] 5F1C: siSubPhaseID:%d, siStepID:%d, siEffectTime:%d, uc5F10_ControlStrategy:%x, ",
+            siSubPhaseID,
+            siStepID,
+            siEffectTime,
+            uc5F10_ControlStrategy.DBit);
+    smem.vWriteMsgToDOM(msg);
+
+
+    if (uc5F10_ControlStrategy.switchBit.b5 == 0
+        && uc5F10_ControlStrategy.switchBit.b6 == 0) {
+      memset(msg, 0, sizeof(msg));
+      sprintf(msg, "[Debug] 5F1C: bit 5/6 all false");
+      smem.vWriteMsgToDOM(msg);
+      printf("[Debug] 5F1C: bit 5/6 all false\n");
+      printf("Control stratege=%d %d %d %d %d %d %d %d \n",
+             uc5F10_ControlStrategy.switchBit.b1,
+             uc5F10_ControlStrategy.switchBit.b2,
+             uc5F10_ControlStrategy.switchBit.b3,
+             uc5F10_ControlStrategy.switchBit.b4,
+             uc5F10_ControlStrategy.switchBit.b5,
+             uc5F10_ControlStrategy.switchBit.b6,
+             uc5F10_ControlStrategy.switchBit.b7,
+             uc5F10_ControlStrategy.switchBit.b8);
+      vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
+      return false;
+    }
+    if (smem.vGet5F18EffectTime() <= 0) {
+      memset(msg, 0, sizeof(msg));
+      sprintf(msg, "[Debug] 5F18: Effect time Error");
+      smem.vWriteMsgToDOM(msg);
+      printf("[Debug] 5F18: Effect time Error");
+
+      vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
+      return false;
+    }
+
+    usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
+    if (siSubPhaseID == 0 && siStepID == 0 && siEffectTime == 0) {
+      if (stc.vGetUSIData(CSTC_exec_phase_current_subphase_step) == 0 && !CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC)) { //only green step can do
+        CSTC::Lock_to_Set_Next_Step();
+        stc.vReportGoToNextPhaseStep_5F0C();
+        // CSTC::Dyn_to_TOD_Step_set(usiCurrentSubphaseStep);
+        vReturnToCenterACK(0x5F, 0x1C);
+      }
+      return true;
+    } else if ((siStepID == 0)
+        && (siSubPhaseID - 1 <= CSTC::get_exec_phase()._subphase_count) &&
+        (siSubPhaseID > 0) &&
+        ((siSubPhaseID - 1 != stc.get_exec_phase_current_subphase()))) { //only green step & !current_subphase can do
+            if(stc.vGetUSIData(CSTC_exec_phase_current_subphase_step) == 0 && !CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC)) 
+            {
+              CSTC::Lock_to_Set_Next_Step();
+              stc.vReportGoToNextPhaseStep_5F0C();
+              // CSTC::Dyn_to_TOD_Step_set(usiCurrentSubphaseStep);
+            }
+              smem.setDynJump_subphaseID(siSubPhaseID - 1);
+              smem.setDynJump_subphase(true);
+              vReturnToCenterACK(0x5F, 0x1C);
+    } else if (CSTC::get_exec_phase_current_subphase() == siSubPhaseID - 1
+        && usiCurrentSubphaseStep == siStepID - 1) { // step & phase == current step & phase
+      //要如何判斷時間走了多久是這邊動態調整的一個重要課題，
+      //因為目前控制器的機制是單用timer去控的，
+      //如果沒有另外一個變數去紀錄目前走了多久的話根本無法得知目前走了多久的綠燈也就無從重算綠燈秒數
+      if(stc.vGetUSIData(CSTC_exec_phase_current_subphase_step) == 0 && !CSTC::Lock_to_Set_Control_Strategy(STRATEGY_ALLDYNAMIC)) 
+      {
+      short _5f1c_new_EffectTime = siEffectTime - CSTC::get5F1CAlreadyPassedSec();
+      if (_5f1c_new_EffectTime > 0) {
+        if(smem.dyn_5F1C_reserve_value.DoubleCheck == true && smem.dyn_5F1C_reserve_value.ReserveSubphase == CSTC::get_exec_phase_current_subphase() && smem.dyn_5F1C_reserve_value.ReserveSec == siEffectTime)
+        {smem.dyn_5F1C_reserve_value.DoubleCheck = false;} //當DoubleCheck開啟且預存分相與秒數等於當前指令分相與秒數 不做任何動作並關閉DoubleCheck
+        else
+        {
+        _intervalTimer.vAllDynamicStepCount(_5f1c_new_EffectTime);
+        stc.vReportGoToNextPhaseStep_5F0C();
+        vReturnToCenterACK(0x5F, 0x1C);
+        }
+      } else if (_5f1c_new_EffectTime <= 0) { //jump to next step
+        // intervalTimer::Lock_to_Set_Next_Dyn_Step();
+        CSTC::Lock_to_Set_Next_Step();
+        stc.vReportGoToNextPhaseStep_5F0C();
+        vReturnToCenterACK(0x5F, 0x1C);
+      }
+      }
+    } else if (siStepID == 1 &&
+        siSubPhaseID > 0 && siEffectTime > 0) {
+      smem.dyn_5F1C_reserve_value.isNew = true;
+      smem.dyn_5F1C_reserve_value.DoubleCheck = true;
+      smem.dyn_5F1C_reserve_value.ReserveSubphase = siSubPhaseID - 1;
+      smem.dyn_5F1C_reserve_value.ReserveStep = siStepID - 1;
+      smem.dyn_5F1C_reserve_value.ReserveSec = siEffectTime;
+      vReturnToCenterACK(0x5F, 0x1C);
+    } else vReturnToCenterNACK(0x5F, 0x1C, 0x80, 0x00);
+  }
+    /* check next phase */
+
+  catch (...) {}
 }
 
 

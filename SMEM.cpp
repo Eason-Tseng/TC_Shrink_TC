@@ -8550,3 +8550,18 @@ void SMEM::WriteLCNby_shrinkAPP(int LCN)
 
 
 }
+void SMEM::setDynJump_subphaseID(int subphaseID) //Eason_Ver4.4
+{
+    try{JumpTo_subphaseID=subphaseID;}catch(...){}
+
+}
+void SMEM::setDynJump_subphase(bool flag)
+{
+    try
+    {
+    Alldyn_jump_subphase_flag=flag;
+    if(!flag)
+    stc.vReportGoToNextPhaseStep_5F0C();
+    }
+    catch(...){}
+}

@@ -320,6 +320,7 @@ class CSTC
     //jacky20140514
 //  static DATA_Bit east;
 //  static DATA_Bit west;
+    static int _5f1c_already_passed_sec; //Eason_Ver4.4
 
 public:
     CPhaseInfo Get_stc_phase(int phase_num);
@@ -343,6 +344,11 @@ ControlStrategy Get_current_stratage();
     static void ReadAllData(void);
     static bool GetAllDynamicFlag(); //Eason_Ver4.4
     static void SetAllDynamicFlag(bool allDynamicFlag); //Eason_Ver4.4
+    static unsigned short int vGet5F10BootStepTime(void); //Eason_Ver4.4
+    static void CSTC::Lock_to_Set_Next_Step_for_5f1001(); //Eason_Ver4.4
+    static CPhaseInfo get_exec_phase(); //Eason_Ver4.4
+    static int get_exec_phase_current_subphase(); //Eason_Ver4.4
+    static int get5F1CAlreadyPassedSec(); //Eason_Ver4.4
     static bool AllRed5Seconds(void);
 
     static bool SetDefaultLCNPhaseOrder(unsigned short int lcn, unsigned short int phase_order);
@@ -595,6 +601,7 @@ ControlStrategy Get_current_stratage();
     static unsigned char ucTODNextPlanID;
 
     static void CheckDynSegAndSendNextPlanId();
+    static void Dyn_to_TOD_Step_set(unsigned short currentSubphaseStep);
 
 };
 //----------------------------------------------------------

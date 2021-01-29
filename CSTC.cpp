@@ -114,6 +114,7 @@ unsigned short int CSTC::_exec_segment_current_seg_no=0;  //FIRST_TIME setting r
 unsigned short int CSTC::_exec_reversetime_current_rev_no = 0;
 unsigned short int CSTC::_exec_reversetime_current_rev_step = 0;
 timespec CSTC::strategy_start_time= {0,0};
+int CSTC::_5f1c_already_passed_sec = 0;
 // CIOCom CSTC::_detector_io;
 SBuffer CSTC::_buffer;    // store the read buffer
 CPacketCluster CSTC::_packet_c;  // store the read packets
@@ -1469,27 +1470,30 @@ void * CSTC::_stc_thread_light_control_func( void * )
 
                 uc5F10_ControlStrategy.DBit = smem.vGetUCData(TC92_ucControlStrategy);
 
-                pthread_mutex_lock(&CSTC::_stc_mutex);
-                if(_current_strategy==STRATEGY_MANUAL || _current_strategy==STRATEGY_ALLDYNAMIC
-                        || uc5F10_ControlStrategy.DBit == 0x30)   //OT1000218
-                {
+          pthread_mutex_lock(&CSTC::_stc_mutex);
+          if (_current_strategy == STRATEGY_MANUAL
+              || _current_strategy == STRATEGY_ALLDYNAMIC
+              || uc5F10_ControlStrategy.DBit == 0x30)   //OT1000218
+          {
+            unsigned short usiCurrentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
+            if (clock_gettime(CLOCK_REALTIME, &strategy_start_time) < 0)
+              perror("Can not get strategy start time");
+            ReSetStep(true);
+            Dyn_to_TOD_Step_set(usiCurrentSubphaseStep);
+            ReSetExtendTimer();
+            SetLightAfterExtendTimerReSet();
+            
 
-                    if(clock_gettime(CLOCK_REALTIME, &strategy_start_time)<0) perror("Can not get strategy start time");
-                    ReSetStep(true);
-                    ReSetExtendTimer();
-                    SetLightAfterExtendTimerReSet();
+            if (_current_strategy == STRATEGY_ALLDYNAMIC) {
+              stc.vReportGoToNextPhaseStep_5F0C();
+            }
+          }
+          /******** unlock mutex ********/
+          pthread_mutex_unlock(&CSTC::_stc_mutex);
 
-                    if(_current_strategy==STRATEGY_ALLDYNAMIC)
-                    {
-                        stc.vReportGoToNextPhaseStep_5F0C();
-                    }
-                }
-
-                pthread_mutex_unlock(&CSTC::_stc_mutex);
-
-                //OT Debug Signal 951116
-                smem.vSetBOOLData(TC_SIGNAL_NEXT_STEP_OK, true);
-                break;
+          //OT Debug Signal 951116
+          smem.vSetBOOLData(TC_SIGNAL_NEXT_STEP_OK, true);
+          break;
 
             case( SIGNAL_TIMER ):
                 timerid = light_control_siginfo.si_value.sival_int; //timerid={0,1,2,3,4}
@@ -15958,4 +15962,74 @@ bool CSTC::GetAllDynamicFlag() //Eason_Ver3.4
 void CSTC::SetAllDynamicFlag(bool allDynamicFlag) //Eason_Ver3.4
 {
   AllDynamicFlag = allDynamicFlag;
+}
+unsigned short int CSTC::vGet5F10BootStepTime(void)  //Eason_Ver4.4
+{
+    try 
+    {
+    unsigned short int time_difference = 0;
+    timer_gettime(_timer_plan, &_itimer_plan);
+    time_difference = (_itimer_plan.it_value.tv_sec) + 1;
+    return time_difference;
+    }
+    catch (...) {}
+}
+void CSTC::Lock_to_Set_Next_Step_for_5f1001() //Eason_Ver4.4
+{
+    ReSetStep(true);
+    ReSetExtendTimer();
+    SetLightAfterExtendTimerReSet();
+    if (smem.vGetBOOLData(TC_CCTActuate_TOD_Running) == true) vCheckPhaseForTFDActuateExtendTime_5FCF();
+}
+CPhaseInfo CSTC::get_exec_phase() //Eason_Ver4.4
+{
+  return _exec_phase;
+}
+int CSTC::get_exec_phase_current_subphase() //Eason_Ver4.4
+{
+  return _exec_phase_current_subphase;
+}
+int CSTC::get5F1CAlreadyPassedSec() //Eason_Ver4.4
+{
+  return _5f1c_already_passed_sec;
+}
+void CSTC::Dyn_to_TOD_Step_set(unsigned short currentSubphaseStep) //Eason_Ver4.4
+{
+
+  usleep(100);
+  // unsigned short currentSubPhase = stc.vGetUSIData(CSTC_exec_phase_current_subphase);
+  unsigned short oldstep = currentSubphaseStep;
+  currentSubphaseStep = stc.vGetUSIData(CSTC_exec_phase_current_subphase_step);
+
+  if ((smem.dyn_5F1C_reserve_value.isNew) &&
+      _exec_phase_current_subphase_step == 0 &&
+      stc.vGetUSIData(CSTC_exec_phase_current_subphase)
+          == smem.dyn_5F1C_reserve_value.ReserveSubphase) {
+    smem.dyn_5F1C_reserve_value.isNew = false;
+    int reserve_sec = smem.dyn_5F1C_reserve_value.ReserveSec;
+
+    _intervalTimer.vAllDynamicStepCount(reserve_sec);
+
+
+  } else {
+
+    if (oldstep == currentSubphaseStep) smem.vWriteMsgToDOM("currentSubphaseStep Error!!!");
+    // if (currentSubphaseStep == 0 && currentSubPhase == 0) smem.vWriteMsgToDOM("Phase 1 Setp 1 Start");
+    // if (currentSubphaseStep == 1 && currentSubPhase == 0) smem.vWriteMsgToDOM("Phase 1 Setp 2 Start");
+    // if (currentSubphaseStep == 2 && currentSubPhase == 0) smem.vWriteMsgToDOM("Phase 1 Setp 3 Start");
+    // if (currentSubphaseStep == 3 && currentSubPhase == 0) smem.vWriteMsgToDOM("Phase 1 Setp 4 Start");
+    // if (currentSubphaseStep == 4 && currentSubPhase == 0) smem.vWriteMsgToDOM("Phase 1 Setp 5 Start");
+    // if (currentSubphaseStep == 0 && currentSubPhase == 1) smem.vWriteMsgToDOM("Phase 2 Setp 1 Start");
+    // if (currentSubphaseStep == 1 && currentSubPhase == 1) smem.vWriteMsgToDOM("Phase 2 Setp 2 Start");
+    // if (currentSubphaseStep == 2 && currentSubPhase == 1) smem.vWriteMsgToDOM("Phase 2 Setp 3 Start");
+    // if (currentSubphaseStep == 3 && currentSubPhase == 1) smem.vWriteMsgToDOM("Phase 2 Setp 4 Start");
+    // if (currentSubphaseStep == 4 && currentSubPhase == 1) smem.vWriteMsgToDOM("Phase 2 Setp 5 Start");
+
+
+    if (currentSubphaseStep == 0)  _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_green_time));
+    else if (currentSubphaseStep == 1) _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedgreenflash_time));
+    else if (currentSubphaseStep == 2) _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_pedred_time));
+    else if (currentSubphaseStep == 3) _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_yellow_time));
+    else if (currentSubphaseStep == 4) _intervalTimer.vAllDynamicStepCount(stc.vGetUSIData(CSTC_exec_plan_allred_time));
+  }
 }
