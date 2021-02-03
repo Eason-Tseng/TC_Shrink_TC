@@ -145,8 +145,8 @@ SMEM::SMEM(void)
         Plantransition = false;
 
         iFirmwareYear = 2021;
-        iFirmwareMonth = 01;
-        iFirmwareDay = 12;
+        iFirmwareMonth = 02;
+        iFirmwareDay = 03;
 
         //OT20140304, force log step status to /tmp
         //OT20131225, add Southern Taiwan Science Park(STSP) Greenman
@@ -219,6 +219,8 @@ SMEM::SMEM(void)
         //jacky20140526
         SRC1 = 1;
         SRC2 = 1;    //jacky20140522 BRT短程通訊
+
+        Alldyn_jump_subphase_flag=false;
 
         printf("SMEM Init. OK!\n");
 
@@ -8555,6 +8557,18 @@ void SMEM::setDynJump_subphaseID(int subphaseID) //Eason_Ver4.4
     try{JumpTo_subphaseID=subphaseID;}catch(...){}
 
 }
+
+int SMEM::getDynJumpTo_subphase(){return JumpTo_subphaseID;} //Eason_Ver4.4
+
+bool SMEM::isDynJump_subphase() //Eason_Ver4.4
+{
+try
+{
+    return Alldyn_jump_subphase_flag;
+}
+catch(...){}
+}
+
 void SMEM::setDynJump_subphase(bool flag)
 {
     try

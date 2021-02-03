@@ -349,6 +349,7 @@ ControlStrategy Get_current_stratage();
     static CPhaseInfo get_exec_phase(); //Eason_Ver4.4
     static int get_exec_phase_current_subphase(); //Eason_Ver4.4
     static int get5F1CAlreadyPassedSec(); //Eason_Ver4.4
+    static void count5F1C_AlreadyPassedSec(); //Eason_Ver4.4
     static bool AllRed5Seconds(void);
 
     static bool SetDefaultLCNPhaseOrder(unsigned short int lcn, unsigned short int phase_order);

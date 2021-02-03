@@ -220,6 +220,7 @@ try{
     smem.vSetUCData(TC92_ucControlStrategy, _ControlStrategy.DBit);
     smem.vSetINTData(TC92_iEffectTime, EffectTime);
 
+    if(smem.vGetThisCycleRunCCJPlan5F18() == false)
     smem.vSet5F18EffectTime(EffectTime);  //OT20110517
     smem.vSetINTData(TC92_iEffectTime, EffectTime);  //OT20110517
 

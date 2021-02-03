@@ -137,6 +137,8 @@ public:
     struct itimerspec _ShareSimCycle;
     void setDynJump_subphaseID(int subphaseID); //Eason_Ver4.4
     void setDynJump_subphase(bool flag); //Eason_Ver4.4
+    int getDynJumpTo_subphase(); //Eason_Ver4.4
+    bool isDynJump_subphase(); //Eason_Ver4.4
     bool vSaveShareMemoryDataToDOM(void);
 
     bool vSetSimIntervalTime(itimerspec);

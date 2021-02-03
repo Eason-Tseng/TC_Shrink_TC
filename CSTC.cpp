@@ -1448,18 +1448,54 @@ void * CSTC::_stc_thread_light_control_func( void * )
                     //Check Current Phase is not 0xB0 (flash light)
 
                     //OT980406
-                    if(_exec_phase._phase_order == 0xB0 || _exec_phase._phase_order == 0x80)
-                    {
-                        ReSetStep(true);
-                    }
-                    else
-                    {
-                        ReSetStep(false);
-                    }
+                    // if(_exec_phase._phase_order == 0xB0 || _exec_phase._phase_order == 0x80)
+                    // {
+                    //     ReSetStep(true);
+                    // }
+                    // else
+                    // {
+                    //     ReSetStep(false);
+                    // }
 
 
+                    // ReSetExtendTimer();
+                    // SetLightAfterExtendTimerReSet();
+                    char msg[254];
+                unsigned short planorderTem;
+                planorderTem = stc.vGetUSIData(CSTC_exec_plan_phase_order);//紀錄舊Plan order
+                if(planorderTem == 0x80 || planorderTem == 0xB0)//舊Plan order == 閃光
+                {
+                  ReSetStep(true);
+                  if(planorderTem != stc.vGetUSIData(CSTC_exec_plan_phase_order))//新Plan order != 閃光
+                  {
+                    // printf("\n\n\n\n\n\nnow is add ALLRED 3sec test!!!\n\n\n\n\n");
+                    ReSetExtendTimer();
+                    AllRed5Seconds();
+                    _current_strategy = STRATEGY_TOD;
+                    // _exec_phase_current_subphase = 0;
+                    // _exec_phase_current_subphase_step = 0;
+                    ReSetStep(false);
+                    _current_strategy = STRATEGY_MANUAL;
+                    ReSetStep(false);
+                    SendRequestToKeypad();
                     ReSetExtendTimer();
                     SetLightAfterExtendTimerReSet();
+                    if (smem.vGetBOOLData(TC_CCTActuate_TOD_Running) == true) vCheckPhaseForTFDActuateExtendTime_5FCF();                                
+                  }
+                  else//新舊Plan order == 閃光
+                  {
+                    ReSetExtendTimer();
+                    SetLightAfterExtendTimerReSet();
+                    if (smem.vGetBOOLData(TC_CCTActuate_TOD_Running) == true) vCheckPhaseForTFDActuateExtendTime_5FCF();
+                  }
+                }
+                else
+                {
+                  ReSetStep(true);
+                  ReSetExtendTimer();
+                  SetLightAfterExtendTimerReSet();
+                  if (smem.vGetBOOLData(TC_CCTActuate_TOD_Running) == true) vCheckPhaseForTFDActuateExtendTime_5FCF();     
+                }
 
                     break;
                 }
@@ -1928,6 +1964,11 @@ void CSTC::ReSetStep(bool step_up)
                          }*/
                         if(_exec_phase_current_subphase > 0)
                             BF02_PriorityParameters();  //jacky20140520  BF02
+
+                        if (smem.isDynJump_subphase()) {
+                            _exec_phase_current_subphase = smem.getDynJumpTo_subphase();
+                            smem.setDynJump_subphase(false);
+                        }
                     }
                     printf("after _exec_phase_current_subphase_step is %d", _exec_phase_current_subphase_step);
                 }
@@ -15992,6 +16033,15 @@ int CSTC::get_exec_phase_current_subphase() //Eason_Ver4.4
 int CSTC::get5F1CAlreadyPassedSec() //Eason_Ver4.4
 {
   return _5f1c_already_passed_sec;
+}
+void CSTC::count5F1C_AlreadyPassedSec() { //Eason_Ver4.4
+  try {
+
+    if (stc.vGetUSIData(CSTC_exec_phase_current_subphase_step) == 0)
+      _5f1c_already_passed_sec++;
+    else _5f1c_already_passed_sec = 0;
+
+  } catch (...) {}
 }
 void CSTC::Dyn_to_TOD_Step_set(unsigned short currentSubphaseStep) //Eason_Ver4.4
 {

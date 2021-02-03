@@ -467,6 +467,8 @@ void * intervalTimer::PTime(void *arg)
 
                     smem.vSet5F18EffectTimeCountDown();
 
+                    CSTC::count5F1C_AlreadyPassedSec(); //Eason_Ver4.4
+
                     smem.vSet_DIOByte(digitalIO.vReadDigitalIO());
 
                     _intervalTimer.GetDoorStatus();
