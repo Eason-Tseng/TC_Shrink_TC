@@ -35,7 +35,7 @@ class TCPService {
   bool
   parsTCP_JsonV3Content(char *buff, int connfd);
   string StringForSend;
-  shirink_app ShrinkAppDriver;
+  // shirink_app ShrinkAppDriver;
 
 
 };

@@ -28,6 +28,7 @@
 #include "screenActuateBUSEdit.h"
 #include "screenActuateArwenManyStatus2.h"
 #include "screenActuateArwenManyStatus.h"
+// #include "TCPService.h"
 
 //unsigned char SubPhaseId_5F19 = 0;
 //unsigned char ActuateType_5F19 = 0;
@@ -700,7 +701,7 @@ bool PTRAFFIC92TC::vWriteReverseTimeData5F12(MESSAGEOK DataMessageIn)
         stc._for_center_holidayrev._end_day     = DataMessageIn.packet[28];
 
         stc.Lock_to_Save_HoliDayReverseTime_Step1(0);
-
+        shrinkAPP.refresh_tc_project_data();
         return true;
 
     }
@@ -993,7 +994,7 @@ bool PTRAFFIC92TC::vWritePhase5F13(MESSAGEOK DataMessageIn)
         smem.vSetINTData(TC92_iUpdatePhaseData, 1);
         smem.vSetTCPhasePlanSegTypeData(TC_Phase, iPhaseOrder, true);
         //OTMARKPRINTF  printf("[OT] Save Ok.\n");
-
+        shrinkAPP.Packed_step_info();
 //OTMARKPRINTF  printf("SAVE Phase:%d OK!!\n",iPhaseOrder);
 
         return true;
@@ -1279,7 +1280,7 @@ bool PTRAFFIC92TC::vWritePlan5F14(MESSAGEOK DataMessageIn)
             }
             printf("-------------------------5F14--------------------------\n");
             stc.Lock_to_Save_Plan_from_Center();             //Àx¦s¦^¥h
-
+            shrinkAPP.Packed_plancontext_info();
             //OTMARKPRINTF  printf("SAVE Plan:%d OK!!\n",DataMessageIn.packet[9]);
 
 
@@ -1480,7 +1481,7 @@ bool PTRAFFIC92TC::vWritePlanDBMS5F15(MESSAGEOK DataMessageIn)
             screenLast92TCPlanSegmentUpdate.DisplayPlanUpdate();
           shrinkAPP.Init_DBupdateInfo();
             printf("SAVE Plan:%d OK!\n",DataMessageIn.packet[9]);
-
+            shrinkAPP.Packed_plancontext_info();
         }
     }
     catch (...) {}
@@ -1715,6 +1716,8 @@ bool PTRAFFIC92TC::vWriteSegment5F16(MESSAGEOK DataMessageIn)
         smem.vSetTCPhasePlanSegTypeData(TC_SegType, DataMessageIn.packet[9], true);
         screenLast92TCPlanSegmentUpdate.DisplaySegmentUpdate();
       shrinkAPP.Init_DBupdateInfo();
+      shrinkAPP.Packed_segmentinfo();
+      shrinkAPP.Packed_Tod_info();
         return true;
 
     }
@@ -1967,7 +1970,9 @@ bool PTRAFFIC92TC::vWriteSpecialSegment5F17(MESSAGEOK DataMessageIn)
         stc.Lock_to_Save_HoliDaySegment_from_Center();       //save
         smem.vSetTCPhasePlanSegTypeData(TC_SegType, DataMessageIn.packet[9], true);
         screenLast92TCPlanSegmentUpdate.DisplaySegmentUpdate();
-      shrinkAPP.Init_DBupdateInfo();
+        shrinkAPP.Init_DBupdateInfo();
+        shrinkAPP.Packed_Special_day_info();
+        shrinkAPP.Packed_segmentinfo();
         return true;
 
     }
@@ -3229,7 +3234,7 @@ bool PTRAFFIC92TC::vWritePhaseByStep5F2F(MESSAGEOK DataMessageIn)
         stc.Lock_to_Save_Phase_from_Center();             //Àx¦s¦^¥h
         smem.vSetINTData(TC92_iUpdatePhaseData, 1);
         smem.vSetTCPhasePlanSegTypeData(TC_Phase, iPhaseOrder, true);
-
+        shrinkAPP.Packed_step_info();
 
 //OTMARKPRINTF  printf("SAVE Phase:%d OK!!\n",iPhaseOrder);
 
