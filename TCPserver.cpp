@@ -259,7 +259,7 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
   printf("parsTCP_JsonV3Content connfd=%d\n", connfd);
   Json::Value JsonObjForAp;
   Json::Reader reader;
-  shirink_app ShrinkAppDriver;
+  // shirink_app ShrinkAppDriver;
   string check;
   int chek = 0;
   Json::Value object_c;
@@ -275,20 +275,20 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
       if (JsonObjForAp.isObject() && JsonObjForAp.isMember("setPassword")) {
         printf("hello setPassword\n");
         printf("%s\n", JsonObjForAp["setPassword"].toStyledString().c_str());
-        ShrinkAppDriver.set_password(JsonObjForAp);
+        shrinkAPP.set_password(JsonObjForAp);
         printf("test\n");
       }
 
       if (JsonObjForAp.isObject() && JsonObjForAp.isMember("weekdaysegment")) {
         printf("hello weekdaysegment\n");
         printf("%s\n", JsonObjForAp["weekdaysegment"].toStyledString().c_str());
-        ShrinkAppDriver.set_weekdaysegment(JsonObjForAp);
+        shrinkAPP.set_weekdaysegment(JsonObjForAp);
         printf("test\n");
-        ShrinkAppDriver.refresh_tc_project_data();
-        ShrinkAppDriver.Packed_Tod_info();
+        shrinkAPP.refresh_tc_project_data();
+        shrinkAPP.Packed_Tod_info();
 
         object_c["Report"] = "todspdinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -298,13 +298,13 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
       } else if (JsonObjForAp.isMember("specialdaycontext")) {
         printf("%s\n",
                JsonObjForAp["specialdaycontext"].toStyledString().c_str());
-        ShrinkAppDriver.set_specialdaycontext(JsonObjForAp);
+        shrinkAPP.set_specialdaycontext(JsonObjForAp);
         printf("hello specialdaycontext\n");
-        ShrinkAppDriver.refresh_tc_project_data();
-        ShrinkAppDriver.Packed_Special_day_info();
+        shrinkAPP.refresh_tc_project_data();
+        shrinkAPP.Packed_Special_day_info();
 
         object_c["Report"] = "todspdinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -313,12 +313,12 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
       } else if (JsonObjForAp.isMember("segmentinfo")) {
 
         printf("%s\n", JsonObjForAp["segmentinfo"].toStyledString().c_str());
-        ShrinkAppDriver.set_segment_info(JsonObjForAp);
+        shrinkAPP.set_segment_info(JsonObjForAp);
         printf("hello segmentinfo\n");
-        ShrinkAppDriver.refresh_tc_project_data();
-        ShrinkAppDriver.Packed_segmentinfo();
+        shrinkAPP.refresh_tc_project_data();
+        shrinkAPP.Packed_segmentinfo();
         object_c["Report"] = "segmentinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -328,12 +328,12 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
       } else if (JsonObjForAp.isMember("plancontext")) {
         printf("%s\n", JsonObjForAp["plancontext"].toStyledString().c_str());
 
-        ShrinkAppDriver.set_plancontext_info(JsonObjForAp);
+        shrinkAPP.set_plancontext_info(JsonObjForAp);
         printf("hello plancontext\n");
-        ShrinkAppDriver.refresh_tc_project_data();
-        ShrinkAppDriver.Packed_plancontext_info();
+        shrinkAPP.refresh_tc_project_data();
+        shrinkAPP.Packed_plancontext_info();
         object_c["Report"] = "planinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -343,14 +343,14 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
 
         printf("%s\n", JsonObjForAp["step"].toStyledString().c_str());
 
-        ShrinkAppDriver.set_step_info(JsonObjForAp);
+        shrinkAPP.set_step_info(JsonObjForAp);
 
 
         printf("hello step\n");
-        ShrinkAppDriver.refresh_tc_project_data();
-        ShrinkAppDriver.Packed_step_info();
+        shrinkAPP.refresh_tc_project_data();
+        shrinkAPP.Packed_step_info();
         object_c["Report"] = "stepinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -358,34 +358,34 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
         }
       } else if (JsonObjForAp.isMember("ReportCycle")) {
         printf("%s\n", JsonObjForAp["ReportCycle"].toStyledString().c_str());
-        ShrinkAppDriver.setReportCycle(JsonObjForAp);
+        shrinkAPP.setReportCycle(JsonObjForAp);
 
-        ShrinkAppDriver.Init_reportcycle();
+        shrinkAPP.Init_reportcycle();
         object_c["Report"] = "cycleinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
           return 0;
         }
-        ShrinkAppDriver.Init_reportcycle();
+        shrinkAPP.Init_reportcycle();
       } else if (JsonObjForAp.isMember("manual_setting")) {
         printf("%s\n", JsonObjForAp["manual_setting"].toStyledString().c_str());
-        ShrinkAppDriver.set_manual_setting(JsonObjForAp);
+        shrinkAPP.set_manual_setting(JsonObjForAp);
 
-        ShrinkAppDriver.Init_manual_setting();
+        shrinkAPP.Init_manual_setting();
 
       } else if (JsonObjForAp.isMember("RedCoutnHWSetting")) {
         printf("%s\n",
                JsonObjForAp["RedCoutnHWSetting"].toStyledString().c_str());
-        ShrinkAppDriver.set_RedCountHWSetting(JsonObjForAp);
-        ShrinkAppDriver.Init_RedCountHWSetting();
+        shrinkAPP.set_RedCountHWSetting(JsonObjForAp);
+        shrinkAPP.Init_RedCountHWSetting();
 
       } else if (JsonObjForAp.isMember("date")) {
         printf("%s\n", JsonObjForAp["date"].toStyledString().c_str());
-        ShrinkAppDriver.ModifyDate(JsonObjForAp);
+        shrinkAPP.ModifyDate(JsonObjForAp);
         object_c["Report"] = "dateinfo_ok";
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         chek = send(connfd, check.c_str(), check.size(), 0) < 0;
         if (chek) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
@@ -397,48 +397,48 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
 
         if (checkRebootResult == 1) {
           smem.vWriteMsgToDOM("shrink reboot tc\n");
-          ShrinkAppDriver.RebootTC();
+          shrinkAPP.RebootTC();
         } else printf("reboot command error\n");
 
       } else if (JsonObjForAp.isMember("IP_Group")) {
         printf("%s\n", JsonObjForAp["IP_Group"].toStyledString().c_str());
 
-        ShrinkAppDriver.set_ip(JsonObjForAp["IP_Group"]);
-        ShrinkAppDriver.Init_ip();
+        shrinkAPP.set_ip(JsonObjForAp["IP_Group"]);
+        shrinkAPP.Init_ip();
 
       } else if (JsonObjForAp.isMember("UpdateDB")) {
         printf("%s\n", JsonObjForAp["UpdateDB"].toStyledString().c_str());
 
-        ShrinkAppDriver.UpdateDB(JsonObjForAp["UpdateDB"]);
+        shrinkAPP.UpdateDB(JsonObjForAp["UpdateDB"]);
 
       } else if (JsonObjForAp.isMember("DisplayRedCountID")) {
         printf("%s\n",
                JsonObjForAp["DisplayRedCountID"].toStyledString().c_str());
         for(int ID;ID<10;ID++)
-          ShrinkAppDriver.DisplayRedCountID(ID);
+          shrinkAPP.DisplayRedCountID(ID);
       } else if (JsonObjForAp.isMember("DisplayRedCountCycle")) {
         printf("%s\n",
                JsonObjForAp["DisplayRedCountID"].toStyledString().c_str());
         for(int ID;ID<10;ID++)
-        ShrinkAppDriver.DisplayRedCountCycle(ID);
+        shrinkAPP.DisplayRedCountCycle(ID);
       } else if (JsonObjForAp.isMember("DisplayRedCount88")) {
         printf("%s\n",
                JsonObjForAp["DisplayRedCount88"].toStyledString().c_str());
         for(int ID;ID<10;ID++)
-        ShrinkAppDriver.DisplayRedCount88(ID);
+        shrinkAPP.DisplayRedCount88(ID);
       } else if (JsonObjForAp.isMember("Password")) {
         string check;
         printf("passcheck %s\n",
                JsonObjForAp["Password"].toStyledString().c_str());
         Json::Value object_c;
-        if (ShrinkAppDriver.checkPassword(JsonObjForAp)) {
+        if (shrinkAPP.checkPassword(JsonObjForAp)) {
           object_c["Password"] = 1;
           printf("passwd success\n");
         } else {
           object_c["Password"] = 0;
           printf("passwd false\n");
         }
-        check = ShrinkAppDriver.faster_writer.write(object_c);
+        check = shrinkAPP.faster_writer.write(object_c);
         if (chek = send(connfd, check.c_str(), check.size(), 0) < 0) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);
           return 0;
@@ -450,9 +450,9 @@ bool TCPserver::parsTCP_JsonV3Content(char buff[4096], int connfd) {
       {
         printf("read value\n");
 
-        ShrinkAppDriver.Init_lastUpdateDBdate();
+        shrinkAPP.Init_lastUpdateDBdate();
         StringForSend =
-            ShrinkAppDriver.faster_writer.write(ShrinkAppDriver.string_to_app);
+            shrinkAPP.faster_writer.write(shrinkAPP.string_to_app);
         if (chek = send(connfd, StringForSend.c_str(), StringForSend.size(), 0)
             < 0) {
           printf("send msg error: %s(errno :%d)\n", strerror(errno), errno);

@@ -145,8 +145,8 @@ SMEM::SMEM(void)
         Plantransition = false;
 
         iFirmwareYear = 2021;
-        iFirmwareMonth = 04;
-        iFirmwareDay = 28;
+        iFirmwareMonth = 05;
+        iFirmwareDay = 11;
 
         //OT20140304, force log step status to /tmp
         //OT20131225, add Southern Taiwan Science Park(STSP) Greenman

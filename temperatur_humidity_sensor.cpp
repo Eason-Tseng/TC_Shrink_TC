@@ -113,7 +113,7 @@ void temperatur_humidity_sensor::vAdjTimeByGPS(YMDHMS GPS)
 
 
         time_str.tm_year = GPS.Year + 100;
-        time_str.tm_mon = GPS.Month ;
+        time_str.tm_mon = GPS.Month -1;
         time_str.tm_mday = GPS.Day;
         time_str.tm_hour=GPS.Hour;
         time_str.tm_min=GPS.Min;
